@@ -1,81 +1,78 @@
 <!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cờ 36 Game</title>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cờ 36</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script type="importmap">
-      {
-        "imports": {
-          "react/": "https://aistudiocdn.com/react@^19.2.0/",
-          "react": "https://aistudiocdn.com/react@^19.2.0",
-          "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
-        }
-      }
-    </script>
-    <style>
-      @keyframes piece-appear {
-        from {
-          transform: scale(0.5);
-          opacity: 0;
-        }
-        to {
-          transform: scale(1);
-          opacity: 1;
-        }
-      }
-      .animate-piece-appear {
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/"
+  }
+}
+</script>
+<style>
+    body {
+        background-color: #f0f2f5;
+        background-image: linear-gradient(135deg, #e6e9f0 0%, #eef1f5 100%);
+    }
+    @keyframes title-glow {
+        0%, 100% { text-shadow: 0 0 5px rgba(75, 85, 99, 0.2), 0 0 10px rgba(75, 85, 99, 0.1); }
+        50% { text-shadow: 0 0 15px rgba(75, 85, 99, 0.4), 0 0 25px rgba(75, 85, 99, 0.2); }
+    }
+    .animate-title-glow {
+        animation: title-glow 4s ease-in-out infinite;
+    }
+     @keyframes piece-appear {
+        from { transform: scale(0.5); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .animate-piece-appear {
         animation: piece-appear 0.3s ease-out forwards;
-      }
-
-      @keyframes win-highlight {
-        0%,
-        100% {
-          transform: scale(1);
-          box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7);
-        }
-        50% {
-          transform: scale(1.1);
-          box-shadow: 0 0 15px 5px rgba(255, 215, 0, 0.7);
-        }
-      }
-      .animate-win-highlight {
+    }
+    @keyframes win-highlight {
+        0% { background-color: #fefcbf; transform: scale(1); }
+        50% { background-color: #fde047; transform: scale(1.1); }
+        100% { background-color: #fefcbf; transform: scale(1); }
+    }
+    .animate-win-highlight {
         animation: win-highlight 1.5s ease-in-out infinite;
-        z-index: 10;
-        position: relative;
-      }
-
-      @keyframes title-glow {
-        from {
-          text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 15px #007bff, 0 0 20px #007bff;
-        }
-        to {
-          text-shadow: 0 0 10px #fff, 0 0 15px #fff, 0 0 20px #007bff, 0 0 25px #007bff;
-        }
-      }
-      .animate-title-glow {
-        animation: title-glow 2s ease-in-out infinite alternate;
-      }
-
-      @keyframes overlay-fade-in {
+    }
+    @keyframes overlay-fade-in {
         from { opacity: 0; }
         to { opacity: 1; }
-      }
-      @keyframes modal-scale-up {
+    }
+    .animate-overlay-fade-in {
+        animation: overlay-fade-in 0.3s ease-out forwards;
+    }
+    @keyframes modal-scale-up {
         from { transform: scale(0.8) translateY(20px); opacity: 0; }
         to { transform: scale(1) translateY(0); opacity: 1; }
-      }
-      .animate-overlay-fade-in {
-        animation: overlay-fade-in 0.3s ease-out forwards;
-      }
-      .animate-modal-scale-up {
+    }
+    .animate-modal-scale-up {
         animation: modal-scale-up 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) forwards;
-      }
-    </style>
-  </head>
-  <body class="bg-gray-100">
+    }
+     @keyframes fade-in-up {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .animate-fade-in-up {
+        animation: fade-in-up 0.6s ease-out forwards;
+    }
+</style>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body>
     <div id="root"></div>
-    <script type="module" src="./index.tsx"></script>
-  </body>
+<script type="module" src="/index.tsx"></script>
+</body>
 </html>
