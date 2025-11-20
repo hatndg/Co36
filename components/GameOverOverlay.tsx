@@ -11,13 +11,23 @@ interface GameOverOverlayProps {
         initialElo: number;
         eloChange: number;
     };
+    // New props for review mode
+    viewMode?: 'popup' | 'review';
+    onReview?: () => void;
 }
 
-const GameOverOverlay: React.FC<GameOverOverlayProps> = ({ winner, onConfirm, confirmText, eloInfo }) => {
+const GameOverOverlay: React.FC<GameOverOverlayProps> = ({ 
+    winner, 
+    onConfirm, 
+    confirmText, 
+    eloInfo,
+    viewMode = 'popup',
+    onReview 
+}) => {
     const [displayElo, setDisplayElo] = useState<number | undefined>(eloInfo?.initialElo);
 
     useEffect(() => {
-        if (!eloInfo) return;
+        if (!eloInfo || viewMode !== 'popup') return;
 
         let animationFrameId: number;
         const { initialElo, eloChange } = eloInfo;
@@ -43,7 +53,7 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({ winner, onConfirm, co
         animationFrameId = requestAnimationFrame(animate);
 
         return () => cancelAnimationFrame(animationFrameId);
-    }, [eloInfo]);
+    }, [eloInfo, viewMode]);
 
     if (!winner) {
         return null;
@@ -54,39 +64,74 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({ winner, onConfirm, co
         onConfirm();
     };
 
+    const handleReviewClick = () => {
+        if (onReview) {
+            playSound('click');
+            onReview();
+        }
+    };
+
     const winnerColor = winner === 3 ? 'text-blue-500' : 'text-red-500';
     const eloChangeColor = eloInfo && eloInfo.eloChange >= 0 ? 'text-green-500' : 'text-red-500';
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 animate-overlay-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl p-6 sm:p-10 text-center flex flex-col items-center animate-modal-scale-up transform min-w-[300px]">
-                <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2">
-                    Trận đấu kết thúc!
-                </h2>
-                <p className={`text-3xl sm:text-5xl font-extrabold mb-4 ${winnerColor}`}>
-                    Người chơi {winner} thắng!
-                </p>
+    const popupClasses = "bg-white rounded-2xl shadow-2xl p-6 sm:p-10 text-center flex flex-col items-center min-w-[300px] transform animate-modal-scale-up";
+    const reviewClasses = "bg-black/50 backdrop-blur-md rounded-full h-14 w-[90%] max-w-sm absolute top-5 left-1/2 transform -translate-x-1/2 text-white shadow-xl";
 
-                {eloInfo && (
-                    <div className="my-4 p-4 bg-gray-100 rounded-lg">
-                        <h3 className="text-lg font-semibold text-gray-600">Thay đổi ELO</h3>
-                        <div className="flex items-center justify-center gap-4">
-                            <span className="text-2xl font-bold text-gray-700">{eloInfo.initialElo}</span>
-                            <span className={`text-2xl font-bold ${eloChangeColor}`}>
-                                {eloInfo.eloChange >= 0 ? `+${eloInfo.eloChange}` : eloInfo.eloChange}
-                            </span>
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                            <span className="text-3xl font-bold text-blue-600">{displayElo}</span>
+    return (
+        <div className={`fixed inset-0 flex justify-center items-center z-50 transition-colors duration-500 ${viewMode === 'popup' ? 'bg-black bg-opacity-60 animate-overlay-fade-in' : 'bg-transparent'}`}>
+            <div className={`transition-all duration-500 ease-in-out ${viewMode === 'popup' ? popupClasses : reviewClasses}`}>
+                {viewMode === 'popup' ? (
+                    <>
+                        <h2 className="text-2xl sm:text-4xl font-bold text-gray-800 mb-2">
+                            Trận đấu kết thúc!
+                        </h2>
+                        <p className={`text-3xl sm:text-5xl font-extrabold mb-4 ${winnerColor}`}>
+                            Người chơi {winner} thắng!
+                        </p>
+
+                        {eloInfo && (
+                            <div className="my-4 p-4 bg-gray-100 rounded-lg">
+                                <h3 className="text-lg font-semibold text-gray-600">Thay đổi ELO</h3>
+                                <div className="flex items-center justify-center gap-4">
+                                    <span className="text-2xl font-bold text-gray-700">{eloInfo.initialElo}</span>
+                                    <span className={`text-2xl font-bold ${eloChangeColor}`}>
+                                        {eloInfo.eloChange >= 0 ? `+${eloInfo.eloChange}` : eloInfo.eloChange}
+                                    </span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                    <span className="text-3xl font-bold text-blue-600">{displayElo}</span>
+                                </div>
+                            </div>
+                        )}
+                        <div className="flex flex-col sm:flex-row gap-3 mt-4">
+                            {onReview && (
+                                <button
+                                    onClick={handleReviewClick}
+                                    className="px-6 py-3 text-lg sm:text-xl border-2 border-slate-300 rounded-full text-slate-600 font-semibold cursor-pointer transition-all duration-300 bg-transparent hover:bg-slate-100 active:scale-95 transform"
+                                >
+                                    Xem lại
+                                </button>
+                            )}
+                            <button
+                                onClick={handleConfirmClick}
+                                className="px-8 py-3 text-lg sm:text-xl border-none rounded-full text-white font-semibold cursor-pointer transition-all duration-300 bg-blue-500 hover:bg-blue-600 active:scale-95 transform shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-300"
+                            >
+                                {confirmText}
+                            </button>
                         </div>
+                    </>
+                ) : (
+                    <div className="flex items-center justify-between w-full h-full px-4 animate-fade-in-down">
+                        <p className={`font-bold text-base ${winner === 3 ? 'text-blue-300' : 'text-red-300'}`}>
+                           Người chơi {winner} thắng!
+                        </p>
+                        <button
+                            onClick={handleConfirmClick}
+                            className="px-5 py-1.5 text-sm border-none rounded-full text-slate-900 font-semibold cursor-pointer transition-all duration-300 bg-white hover:bg-gray-200 active:scale-95 transform"
+                        >
+                            {confirmText}
+                        </button>
                     </div>
                 )}
-
-                <button
-                    onClick={handleConfirmClick}
-                    className="mt-4 px-8 py-3 text-lg sm:text-xl border-none rounded-full text-white font-semibold cursor-pointer transition-all duration-300 bg-blue-500 hover:bg-blue-600 active:scale-95 transform shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-300"
-                >
-                    {confirmText}
-                </button>
             </div>
         </div>
     );

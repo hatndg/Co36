@@ -1,4 +1,5 @@
 
+
 import React, { useState } from 'react';
 import Logo from './Logo';
 import MobileGameScreen from './mobile/MobileGameScreen';
@@ -11,26 +12,18 @@ type Screen = 'home' | 'game' | 'profile' | 'instructions';
 
 const MobileApp: React.FC = () => {
     const [activeScreen, setActiveScreen] = useState<Screen>('home');
+    const [activeTabIndex, setActiveTabIndex] = useState(0);
+    const screenOrder: Screen[] = ['home', 'profile', 'instructions'];
 
     const changeScreen = (screen: Screen) => {
         playSound('click');
+        const tabIndex = screenOrder.indexOf(screen);
+        if (tabIndex !== -1) {
+            setActiveTabIndex(tabIndex);
+        }
         setActiveScreen(screen);
     };
 
-    const renderScreen = () => {
-        switch (activeScreen) {
-            case 'game':
-                return <MobileGameScreen onExit={() => setActiveScreen('home')} />;
-            case 'profile':
-                return <ProfileScreen />;
-            case 'instructions':
-                return <InstructionsScreen />;
-            case 'home':
-            default:
-                return <HomeScreen onPlay={() => setActiveScreen('game')} />;
-        }
-    };
-    
     const NavItem: React.FC<{ screen: Screen, label: string, icon: React.ReactElement }> = ({ screen, label, icon }) => {
         const isActive = activeScreen === screen;
         return (
@@ -60,8 +53,29 @@ const MobileApp: React.FC = () => {
             )}
 
             {/* Main Content */}
-            <main className="flex-grow overflow-y-auto">
-                {renderScreen()}
+            <main className="flex-grow overflow-hidden relative">
+                {/* Sliding container for tab screens */}
+                <div
+                    className="absolute top-0 left-0 w-full h-full flex transition-transform duration-300 ease-in-out"
+                    style={{ transform: `translateX(-${activeTabIndex * 100}%)` }}
+                >
+                    <div className="w-full h-full shrink-0 overflow-y-auto">
+                        <HomeScreen onPlay={() => changeScreen('game')} />
+                    </div>
+                    <div className="w-full h-full shrink-0 overflow-y-auto">
+                        <ProfileScreen />
+                    </div>
+                    <div className="w-full h-full shrink-0 overflow-y-auto">
+                        <InstructionsScreen />
+                    </div>
+                </div>
+
+                {/* Overlay for game screen */}
+                {activeScreen === 'game' && (
+                    <div key="game" className="absolute inset-0 z-10 animate-fade-in-up">
+                        <MobileGameScreen onExit={() => changeScreen('home')} />
+                    </div>
+                )}
             </main>
 
             {/* Footer Navigation - Hide during game for more space */}
