@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import Logo from './Logo';
+import { playSound } from '../utils/sounds';
 
 interface LandingPageProps {
   onPlay: () => void;
@@ -36,6 +37,11 @@ const LandingPage: React.FC<LandingPageProps> = ({ onPlay }) => {
     };
   }, []);
 
+  const handlePlayClick = () => {
+    playSound('click');
+    onPlay();
+  };
+
   return (
     <main className="relative min-h-screen w-full bg-slate-900 text-white overflow-y-auto">
       {/* Header */}
@@ -48,7 +54,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onPlay }) => {
                   <a href="#beta-test" className="text-slate-300 hover:text-white transition-colors">Tham gia Beta</a>
               </div>
               <button
-                  onClick={onPlay}
+                  onClick={handlePlayClick}
                   className="px-6 py-2 text-base border-none rounded-full text-white font-semibold cursor-pointer transition-all duration-300 bg-blue-600 hover:bg-blue-700 active:scale-95 transform shadow-md hover:shadow-lg md:hidden"
               >
                   Chơi Ngay
@@ -75,13 +81,14 @@ const LandingPage: React.FC<LandingPageProps> = ({ onPlay }) => {
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button
-                onClick={onPlay}
+                onClick={handlePlayClick}
                 className="px-10 py-4 text-xl border-none rounded-full text-white font-semibold cursor-pointer transition-all duration-300 bg-blue-600 hover:bg-blue-700 active:scale-95 transform shadow-lg hover:shadow-2xl focus:outline-none focus:ring-4 focus:ring-blue-400"
               >
                 Chơi trên Web
               </button>
               <a
                 href="#beta-test"
+                onClick={() => playSound('click')}
                 className="px-10 py-4 text-xl border-2 border-white rounded-full text-white font-semibold cursor-pointer transition-all duration-300 bg-transparent hover:bg-white hover:text-slate-900 active:scale-95 transform focus:outline-none focus:ring-4 focus:ring-slate-500"
               >
                 Tham gia Beta

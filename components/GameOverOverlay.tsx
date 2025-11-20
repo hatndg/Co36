@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Player } from '../types';
+import { playSound } from '../utils/sounds';
 
 interface GameOverOverlayProps {
     winner: Player | null;
@@ -47,6 +48,11 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({ winner, onConfirm, co
     if (!winner) {
         return null;
     }
+    
+    const handleConfirmClick = () => {
+        playSound('click');
+        onConfirm();
+    };
 
     const winnerColor = winner === 3 ? 'text-blue-500' : 'text-red-500';
     const eloChangeColor = eloInfo && eloInfo.eloChange >= 0 ? 'text-green-500' : 'text-red-500';
@@ -76,7 +82,7 @@ const GameOverOverlay: React.FC<GameOverOverlayProps> = ({ winner, onConfirm, co
                 )}
 
                 <button
-                    onClick={onConfirm}
+                    onClick={handleConfirmClick}
                     className="mt-4 px-8 py-3 text-lg sm:text-xl border-none rounded-full text-white font-semibold cursor-pointer transition-all duration-300 bg-blue-500 hover:bg-blue-600 active:scale-95 transform shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-300"
                 >
                     {confirmText}

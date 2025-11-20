@@ -5,11 +5,17 @@ import MobileGameScreen from './mobile/MobileGameScreen';
 import ProfileScreen from './mobile/ProfileScreen';
 import InstructionsScreen from './mobile/InstructionsScreen';
 import HomeScreen from './mobile/HomeScreen';
+import { playSound } from '../utils/sounds';
 
 type Screen = 'home' | 'game' | 'profile' | 'instructions';
 
 const MobileApp: React.FC = () => {
     const [activeScreen, setActiveScreen] = useState<Screen>('home');
+
+    const changeScreen = (screen: Screen) => {
+        playSound('click');
+        setActiveScreen(screen);
+    };
 
     const renderScreen = () => {
         switch (activeScreen) {
@@ -29,7 +35,7 @@ const MobileApp: React.FC = () => {
         const isActive = activeScreen === screen;
         return (
              <button 
-                onClick={() => setActiveScreen(screen)} 
+                onClick={() => changeScreen(screen)} 
                 className={`flex flex-col items-center transition-colors ${isActive ? 'text-blue-400' : 'text-slate-400 hover:text-white'}`}
              >
                 {icon}
@@ -54,9 +60,9 @@ const MobileApp: React.FC = () => {
             )}
 
             {/* Main Content */}
-            <div className="flex-grow overflow-y-auto">
+            <main className="flex-grow overflow-y-auto">
                 {renderScreen()}
-            </div>
+            </main>
 
             {/* Footer Navigation - Hide during game for more space */}
             {activeScreen !== 'game' && (
