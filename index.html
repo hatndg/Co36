@@ -139,6 +139,20 @@
         opacity: 1;
         transform: translateY(0);
       }
+
+      @keyframes turn-glow {
+        0%, 100% {
+          box-shadow: 0 0 5px 2px rgba(59, 130, 246, 0.4); /* blue-500 */
+          border-color: rgba(96, 165, 250, 0.8); /* blue-400 */
+        }
+        50% {
+          box-shadow: 0 0 15px 5px rgba(59, 130, 246, 0.6);
+          border-color: rgba(96, 165, 250, 1);
+        }
+      }
+      .animate-turn-glow {
+        animation: turn-glow 2.5s ease-in-out infinite;
+      }
     </style>
   <link rel="stylesheet" href="/index.css">
 </head>

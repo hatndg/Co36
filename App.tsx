@@ -14,6 +14,7 @@ import GameInfo from './components/GameInfo';
 import GameOverOverlay from './components/GameOverOverlay';
 import LandingPage from './components/LandingPage';
 import MobileApp from './components/MobileApp';
+import { playSound } from './utils/sounds';
 
 type WinCell = { row: number; col: number };
 
@@ -142,6 +143,7 @@ const App: React.FC = () => {
             return;
         }
 
+        playSound('place');
         const newBoardState = boardState.map(r => [...r]);
         newBoardState[row][col] = currentPlayer;
         setBoardState(newBoardState);
@@ -151,6 +153,7 @@ const App: React.FC = () => {
             setStatusText(`Người chơi ${currentPlayer} chiến thắng!`);
             setWinner(currentPlayer);
             setWinningCells(winningLine);
+            playSound('win');
             return;
         }
 
@@ -169,6 +172,7 @@ const App: React.FC = () => {
     const handleUseSkill = (player: Player) => {
         if (gameOver || currentPlayer !== player || skillCooldowns[player] > 0) return;
 
+        playSound('skill');
         setSkillActive(true);
         setMovesLeft(prev => prev + 1);
         setSkillCooldowns(prev => ({
@@ -178,6 +182,7 @@ const App: React.FC = () => {
     };
     
     const handlePlay = () => {
+        playSound('click');
         setView('game');
     };
 
