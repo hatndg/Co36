@@ -14,6 +14,7 @@ import GameInfo from '../GameInfo';
 import GameOverOverlay from '../GameOverOverlay';
 import { addGameToHistory, getElo, saveElo } from '../../utils/storage';
 import { calculateEloChange } from '../../utils/elo';
+import { playSound } from '../../utils/sounds';
 
 interface MobileGameScreenProps {
     onExit: () => void;
@@ -23,6 +24,7 @@ type WinCell = { row: number; col: number };
 type PostGameInfo = { initialElo: number; eloChange: number; finalElo: number };
 
 const AI_PLAYER: Player = 6;
+const HUMAN_PLAYER: Player = 3;
 
 const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
     const [gameMode, setGameMode] = useState<GameMode>(null);
@@ -41,6 +43,7 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
     const gameOver = winner !== null;
 
     const initGame = useCallback((mode: GameMode) => {
+        playSound('click');
         setGameMode(mode);
         const initialBoard: CellState[][] = Array.from({ length: BOARD_SIZE }, () =>
             Array(BOARD_SIZE).fill(null)
@@ -108,15 +111,18 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
     }, []);
 
     const handleEndGame = useCallback((gameWinner: Player) => {
-        if (gameMode !== 'vs-ai-ranked') return;
+        if (gameMode === 'vs-ai-ranked') {
+            const playerElo = getElo();
+            const aiElo = 1200; // Fixed ELO for AI
+            const result = gameWinner === HUMAN_PLAYER ? 'win' : 'loss';
+            const eloChange = calculateEloChange(playerElo, aiElo, result === 'win' ? 1 : 0);
+            const finalElo = playerElo + eloChange;
 
-        const playerElo = getElo();
-        const aiElo = 1200; // Fixed ELO for AI
-        const result = gameWinner === 3 ? 'win' : 'loss';
-        const eloChange = calculateEloChange(playerElo, aiElo, result === 'win' ? 1 : 0);
-        const finalElo = playerElo + eloChange;
-
-        setPostGameInfo({ initialElo: playerElo, eloChange, finalElo });
+            setPostGameInfo({ initialElo: playerElo, eloChange, finalElo });
+            playSound(result === 'win' ? 'win' : 'lose');
+        } else {
+             playSound('win');
+        }
     }, [gameMode]);
 
     const handleConfirmGameOver = () => {
@@ -161,6 +167,9 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
     }, [currentPlayer, skillActive]);
     
     const makeMove = useCallback((row: number, col: number, player: Player) => {
+        if (player === HUMAN_PLAYER) playSound('place');
+        else setTimeout(() => playSound('place'), 300); // Delay AI sound slightly
+
         const newBoardState = boardState.map(r => [...r]);
         newBoardState[row][col] = player;
         setBoardState(newBoardState);
@@ -176,37 +185,57 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
         }
         return false;
     }, [boardState, checkWin, handleEndGame]);
+    
+    const getLineInfo = useCallback((board: CellState[][], r: number, c: number, dr: number, dc: number, player: Player) => {
+        let count = 0;
+        let openEnds = 0;
+        
+        // Positive direction
+        for (let i = 1; i < 7; i++) {
+            const R = r + i * dr;
+            const C = c + i * dc;
+            if (R < 0 || R >= BOARD_SIZE || C < 0 || C >= BOARD_SIZE || board[R][C] !== player) {
+                if (R >= 0 && R < BOARD_SIZE && C >= 0 && C < BOARD_SIZE && board[R][C] === null) openEnds++;
+                break;
+            }
+            count++;
+        }
+        
+        // Negative direction
+        for (let i = 1; i < 7; i++) {
+            const R = r - i * dr;
+            const C = c - i * dc;
+            if (R < 0 || R >= BOARD_SIZE || C < 0 || C >= BOARD_SIZE || board[R][C] !== player) {
+                 if (R >= 0 && R < BOARD_SIZE && C >= 0 && C < BOARD_SIZE && board[R][C] === null) openEnds++;
+                break;
+            }
+            count++;
+        }
+        
+        return { count: count + 1, openEnds };
+    }, []);
 
-    const getLineLength = useCallback((board: CellState[][], row: number, col: number, player: Player): number => {
+    const getMoveScore = useCallback((board: CellState[][], r: number, c: number, player: Player) => {
+        const winCondition = player === 3 ? WIN_CONDITION_3 : WIN_CONDITION_6;
         const directions = player === 3 ? [[0, 1], [1, 0]] : [[0, 1], [1, 0], [1, 1], [1, -1]];
-        let maxLength = 0;
+        let totalScore = 0;
 
         for (const [dr, dc] of directions) {
-            let currentLength = 1;
-            for (let i = 1; i < 6; i++) {
-                const r = row + i * dr;
-                const c = col + i * dc;
-                if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
-                    currentLength++;
-                } else break;
-            }
-            for (let i = 1; i < 6; i++) {
-                const r = row - i * dr;
-                const c = col - i * dc;
-                if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
-                    currentLength++;
-                } else break;
-            }
-            if (currentLength > maxLength) {
-                maxLength = currentLength;
-            }
+            const { count, openEnds } = getLineInfo(board, r, c, dr, dc, player);
+            
+            if (count >= winCondition) return 100000;
+            if (count === winCondition - 1 && openEnds >= 1) totalScore += 5000;
+            if (count === winCondition - 2 && openEnds === 2) totalScore += 1000;
+            if (count === winCondition - 2 && openEnds === 1) totalScore += 500;
+            if (count === winCondition - 3 && openEnds === 2) totalScore += 200;
+            totalScore += count * 10;
         }
-        return maxLength;
-    }, []);
+        return totalScore;
+    }, [getLineInfo]);
 
     const findBestMove = useCallback((): { row: number; col: number } => {
         let bestMove: { row: number, col: number } | null = null;
-        let maxScore = -1;
+        let maxScore = -Infinity;
         const emptyCells: { row: number, col: number }[] = [];
         
         boardState.forEach((row, rIdx) => {
@@ -215,32 +244,28 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
             });
         });
 
-        if (emptyCells.length === 0) return { row: 0, col: 0 };
+        if (emptyCells.length === 0) return { row: -1, col: -1 };
 
-        for (const { row, col } of emptyCells) {
-            let aiTempBoard = boardState.map(r => [...r]);
-            aiTempBoard[row][col] = AI_PLAYER;
-            if (checkWin(row, col, AI_PLAYER, aiTempBoard)) {
-                return { row, col };
-            }
-
-            let playerTempBoard = boardState.map(r => [...r]);
-            playerTempBoard[row][col] = 3;
-            if (getLineLength(playerTempBoard, row, col, 3) >= WIN_CONDITION_3 - 1) {
-                return { row, col };
-            }
+        // Prioritize center if board is empty
+        if (emptyCells.length > (BOARD_SIZE * BOARD_SIZE - 5)) {
+             return { row: Math.floor(BOARD_SIZE/2), col: Math.floor(BOARD_SIZE/2) };
         }
 
         for (const { row, col } of emptyCells) {
-            let playerTempBoard = boardState.map(r => [...r]);
-            playerTempBoard[row][col] = 3;
-            const defensiveScore = Math.pow(getLineLength(playerTempBoard, row, col, 3), 2);
-
-            let aiTempBoard = boardState.map(r => [...r]);
-            aiTempBoard[row][col] = AI_PLAYER;
-            const offensiveScore = Math.pow(getLineLength(aiTempBoard, row, col, AI_PLAYER), 2);
+            let tempBoard = boardState.map(r => [...r]);
             
-            const totalScore = defensiveScore * 1.5 + offensiveScore;
+            // 1. Offensive Score
+            tempBoard[row][col] = AI_PLAYER;
+            const offensiveScore = getMoveScore(tempBoard, row, col, AI_PLAYER);
+            
+            // 2. Defensive Score
+            tempBoard[row][col] = HUMAN_PLAYER;
+            const defensiveScore = getMoveScore(tempBoard, row, col, HUMAN_PLAYER);
+
+            // Reset cell for next iteration
+            tempBoard[row][col] = null;
+            
+            const totalScore = offensiveScore + defensiveScore * 1.5;
 
             if (totalScore > maxScore) {
                 maxScore = totalScore;
@@ -249,13 +274,13 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
         }
         
         return bestMove ?? emptyCells[Math.floor(Math.random() * emptyCells.length)];
-    }, [boardState, checkWin, getLineLength]);
+    }, [boardState, getMoveScore]);
     
     const makeAIMove = useCallback(() => {
         setIsAiThinking(true);
         setTimeout(() => {
             const move = findBestMove();
-            if (move) {
+            if (move && move.row !== -1) {
                 const isGameOver = makeMove(move.row, move.col, AI_PLAYER);
                 if (!isGameOver) {
                     switchPlayer();
@@ -293,9 +318,15 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
 
     const handleUseSkill = (player: Player) => {
         if (gameOver || currentPlayer !== player || skillCooldowns[player] > 0) return;
+        playSound('skill');
         setSkillActive(true);
         setMovesLeft(prev => prev + 1);
         setSkillCooldowns(prev => ({ ...prev, [player]: player === 3 ? SKILL_COOLDOWN_3 : SKILL_COOLDOWN_6 }));
+    };
+
+    const handleExitClick = () => {
+        playSound('click');
+        onExit();
     };
 
     return (
@@ -310,14 +341,14 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
                         <button onClick={() => initGame('vs-player')} className="w-full px-6 py-3 text-lg border-none rounded-full text-white font-bold cursor-pointer transition-all duration-300 bg-blue-600 hover:bg-blue-700 active:scale-95">
                             Chơi với bạn bè
                         </button>
-                        <button onClick={onExit} className="w-full mt-4 px-6 py-3 text-lg border-2 border-slate-500 rounded-full text-slate-300 font-bold cursor-pointer transition-all duration-300 hover:bg-slate-700 active:scale-95">
+                        <button onClick={handleExitClick} className="w-full mt-4 px-6 py-3 text-lg border-2 border-slate-500 rounded-full text-slate-300 font-bold cursor-pointer transition-all duration-300 hover:bg-slate-700 active:scale-95">
                             Quay lại
                         </button>
                      </div>
                 </div>
             ) : (
                 <>
-                    <div className="p-2 sm:p-4 shrink-0">
+                    <div className="p-4 shrink-0">
                         <GameInfo
                             theme="dark"
                             statusText={statusText}
@@ -327,7 +358,7 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
                             onUseSkill={handleUseSkill}
                         />
                     </div>
-                    <main className="flex-grow flex justify-center items-center p-2 min-h-0">
+                    <main className="flex-grow flex justify-center items-center px-2 pb-2 min-h-0">
                          <Board boardState={boardState} onCellClick={handleCellClick} winningCells={winningCells} lastMove={lastMove} />
                     </main>
                     <GameOverOverlay 

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { getGameHistory } from '../../utils/storage';
 import { GameHistoryEntry } from '../../types';
+import { playSound } from '../../utils/sounds';
 
 const HomeScreen: React.FC<{ onPlay: () => void }> = ({ onPlay }) => {
     const [history, setHistory] = useState<GameHistoryEntry[]>([]);
@@ -9,6 +10,11 @@ const HomeScreen: React.FC<{ onPlay: () => void }> = ({ onPlay }) => {
     useEffect(() => {
         setHistory(getGameHistory());
     }, []);
+
+    const handlePlayClick = () => {
+        playSound('click');
+        onPlay();
+    };
 
     const getOpponentText = (game: GameHistoryEntry) => {
         if (game.gameMode === 'vs-ai-ranked') {
@@ -37,7 +43,7 @@ const HomeScreen: React.FC<{ onPlay: () => void }> = ({ onPlay }) => {
                 <h1 className="text-4xl font-bold mb-2">Chào mừng trở lại!</h1>
                 <p className="text-lg text-slate-400 mb-10">Sẵn sàng cho một trận đấu trí tuệ?</p>
                 <button
-                    onClick={onPlay}
+                    onClick={handlePlayClick}
                     className="w-full max-w-sm px-8 py-4 text-xl border-none rounded-full text-white font-bold cursor-pointer transition-all duration-300 bg-blue-600 hover:bg-blue-700 active:scale-95 transform shadow-lg hover:shadow-blue-500/50 focus:outline-none focus:ring-4 focus:ring-blue-400"
                 >
                     Tìm trận đấu
