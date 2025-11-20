@@ -22,6 +22,7 @@ interface MobileGameScreenProps {
 
 type WinCell = { row: number; col: number };
 type PostGameInfo = { initialElo: number; eloChange: number; finalElo: number };
+type GameOverViewMode = 'popup' | 'review';
 
 const AI_PLAYER: Player = 6;
 const HUMAN_PLAYER: Player = 3;
@@ -39,6 +40,7 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
     const [isAiThinking, setIsAiThinking] = useState(false);
     const [lastMove, setLastMove] = useState<{ row: number; col: number } | null>(null);
     const [postGameInfo, setPostGameInfo] = useState<PostGameInfo | null>(null);
+    const [gameOverViewMode, setGameOverViewMode] = useState<GameOverViewMode>('popup');
 
     const gameOver = winner !== null;
 
@@ -68,6 +70,7 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
         setWinningCells([]);
         setLastMove(null);
         setPostGameInfo(null);
+        setGameOverViewMode('popup'); // Reset view mode
     }, []);
     
     useEffect(() => {
@@ -89,28 +92,45 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
         const directions = (player === 3)
             ? [[0, 1], [1, 0]]
             : [[0, 1], [1, 0], [1, 1], [1, -1]];
+
         for (const [dr, dc] of directions) {
+            let count = 1;
             const line: WinCell[] = [{ row, col }];
+
+            // Check in positive direction
             for (let i = 1; i < winCondition; i++) {
                 const r = row + i * dr;
                 const c = col + i * dc;
                 if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
+                    count++;
                     line.push({ row: r, col: c });
-                } else break;
+                } else {
+                    break;
+                }
             }
+
+            // Check in negative direction
             for (let i = 1; i < winCondition; i++) {
                 const r = row - i * dr;
                 const c = col - i * dc;
                 if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
-                    line.push({ row: r, col: c });
-                } else break;
+                    count++;
+                    line.unshift({ row: r, col: c });
+                } else {
+                    break;
+                }
             }
-            if (line.length >= winCondition) return line;
+            
+            if (count >= winCondition) {
+                return line;
+            }
         }
+
         return null;
     }, []);
 
     const handleEndGame = useCallback((gameWinner: Player) => {
+        setGameOverViewMode('popup'); // Ensure popup shows first
         if (gameMode === 'vs-ai-ranked') {
             const playerElo = getElo();
             const aiElo = 1200; // Fixed ELO for AI
@@ -149,6 +169,11 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
         }
 
         onExit();
+    };
+    
+    const handleReviewMoves = () => {
+        playSound('click');
+        setGameOverViewMode('review');
     };
 
     const switchPlayer = useCallback(() => {
@@ -366,6 +391,8 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
                         onConfirm={handleConfirmGameOver} 
                         confirmText="Xác nhận"
                         eloInfo={postGameInfo ?? undefined}
+                        viewMode={gameOverViewMode}
+                        onReview={handleReviewMoves}
                     />
                 </>
             )}
