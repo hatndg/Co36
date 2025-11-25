@@ -93,10 +93,12 @@ const App: React.FC = () => {
 
 
     const checkWin = useCallback((row: number, col: number, player: Player, board: CellState[][]): WinCell[] | null => {
+        // Player 3 (Blue) needs 6 in a row, including diagonals.
+        // Player 6 (Red) needs 3 in a row, but NOT diagonals.
         const winCondition = (player === 3) ? WIN_CONDITION_3 : WIN_CONDITION_6;
         const directions = (player === 3)
-            ? [[0, 1], [1, 0]] // Player 3: only horizontal and vertical
-            : [[0, 1], [1, 0], [1, 1], [1, -1]]; // Player 6: horizontal, vertical, and diagonals
+            ? [[0, 1], [1, 0], [1, 1], [1, -1]] // Player 3: horizontal, vertical, and diagonals
+            : [[0, 1], [1, 0]]; // Player 6: only horizontal and vertical
 
         for (const [dr, dc] of directions) {
             const line: WinCell[] = [{ row, col }];

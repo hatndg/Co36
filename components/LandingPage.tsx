@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import Logo from './Logo';
 import { playSound } from '../utils/sounds';
@@ -122,7 +123,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onPlay }) => {
                 <div className="bg-slate-800/50 p-8 rounded-2xl border border-blue-500/50 shadow-lg">
                     <h3 className="text-3xl font-bold text-blue-400 mb-4">Phe 3 (Xanh)</h3>
                     <ul className="space-y-3 text-slate-300">
-                        <li><span className="font-semibold text-white">Điều kiện thắng:</span> Kết nối 6 quân cờ liền nhau theo hàng ngang hoặc hàng dọc.</li>
+                        <li><span className="font-semibold text-white">Điều kiện thắng:</span> Kết nối 6 quân cờ liền nhau theo hàng ngang, dọc hoặc chéo.</li>
                         <li><span className="font-semibold text-white">Số nước đi:</span> 2 nước mỗi lượt.</li>
                         <li><span className="font-semibold text-white">Kỹ năng 'Rau Má':</span> Thêm 1 nước đi (tổng 3 nước). Hồi chiêu 6 lượt.</li>
                     </ul>
@@ -130,7 +131,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onPlay }) => {
                  <div className="bg-slate-800/50 p-8 rounded-2xl border border-red-500/50 shadow-lg">
                     <h3 className="text-3xl font-bold text-red-400 mb-4">Phe 6 (Đỏ)</h3>
                     <ul className="space-y-3 text-slate-300">
-                        <li><span className="font-semibold text-white">Điều kiện thắng:</span> Kết nối 3 quân cờ liền nhau theo hàng ngang, dọc hoặc chéo.</li>
+                        <li><span className="font-semibold text-white">Điều kiện thắng:</span> Kết nối 3 quân cờ liền nhau theo hàng ngang hoặc hàng dọc.</li>
                         <li><span className="font-semibold text-white">Số nước đi:</span> 1 nước mỗi lượt.</li>
                         <li><span className="font-semibold text-white">Kỹ năng 'Rau Má':</span> Thêm 1 nước đi (tổng 2 nước). Hồi chiêu 3 lượt.</li>
                     </ul>
@@ -153,7 +154,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ onPlay }) => {
                 <div className="text-left max-w-md w-full">
                     <h3 className="text-2xl font-semibold mb-2 flex items-center gap-3"><span className="flex items-center justify-center w-8 h-8 rounded-full bg-green-500 text-slate-900 font-bold">2</span> Trở thành người thử nghiệm</h3>
                     <p className="text-slate-400 ml-11 mb-3">Sau khi đã vào nhóm, hãy nhấn vào link bên dưới để tải game và trải nghiệm.</p>
-                    <a href="https://play.google.com/store/apps/details?id=appinventor.ai_bteamapp.Co36" target="_blank" rel="noopener noreferrer" className="inline-block ml-11 px-6 py-3 text-lg border-none rounded-full text-white font-semibold cursor-pointer transition-all duration-300 bg-green-600 hover:bg-green-700 active:scale-95 transform">Tải Game (Beta)</a>
+                    <a href="https://example.com" target="_blank" rel="noopener noreferrer" className="inline-block ml-11 px-6 py-3 text-lg border-none rounded-full text-white font-semibold cursor-pointer transition-all duration-300 bg-green-600 hover:bg-green-700 active:scale-95 transform">Tải Game (Beta)</a>
                 </div>
             </div>
         </section>

@@ -11,7 +11,7 @@ const InstructionsScreen: React.FC = () => {
                 <div className="bg-slate-800/50 p-6 rounded-2xl border border-blue-500/50 shadow-lg">
                     <h3 className="text-2xl font-bold text-blue-400 mb-4">Phe 3 (Xanh)</h3>
                     <ul className="space-y-3 text-slate-300 leading-relaxed">
-                        <li><span className="font-semibold text-white">Điều kiện thắng:</span> Kết nối 6 quân cờ liền nhau theo hàng ngang hoặc hàng dọc.</li>
+                        <li><span className="font-semibold text-white">Điều kiện thắng:</span> Kết nối 6 quân cờ liền nhau theo hàng ngang, dọc hoặc chéo.</li>
                         <li><span className="font-semibold text-white">Số nước đi:</span> 2 nước mỗi lượt.</li>
                         <li><span className="font-semibold text-white">Kỹ năng 'Rau Má':</span> Thêm 1 nước đi (tổng 3 nước). Hồi chiêu 6 lượt.</li>
                     </ul>
@@ -19,7 +19,7 @@ const InstructionsScreen: React.FC = () => {
                 <div className="bg-slate-800/50 p-6 rounded-2xl border border-red-500/50 shadow-lg">
                     <h3 className="text-2xl font-bold text-red-400 mb-4">Phe 6 (Đỏ)</h3>
                     <ul className="space-y-3 text-slate-300 leading-relaxed">
-                        <li><span className="font-semibold text-white">Điều kiện thắng:</span> Kết nối 3 quân cờ liền nhau theo hàng ngang, dọc hoặc chéo.</li>
+                        <li><span className="font-semibold text-white">Điều kiện thắng:</span> Kết nối 3 quân cờ liền nhau theo hàng ngang hoặc hàng dọc.</li>
                         <li><span className="font-semibold text-white">Số nước đi:</span> 1 nước mỗi lượt.</li>
                         <li><span className="font-semibold text-white">Kỹ năng 'Rau Má':</span> Thêm 1 nước đi (tổng 2 nước). Hồi chiêu 3 lượt.</li>
                     </ul>

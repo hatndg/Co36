@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Player, CellState, GameMode } from '../../types';
 import {
@@ -70,7 +69,7 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
         setWinningCells([]);
         setLastMove(null);
         setPostGameInfo(null);
-        setGameOverViewMode('popup'); // Reset view mode
+        setGameOverViewMode('popup');
     }, []);
     
     useEffect(() => {
@@ -90,50 +89,41 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
     const checkWin = useCallback((row: number, col: number, player: Player, board: CellState[][]): WinCell[] | null => {
         const winCondition = (player === 3) ? WIN_CONDITION_3 : WIN_CONDITION_6;
         const directions = (player === 3)
-            ? [[0, 1], [1, 0]]
-            : [[0, 1], [1, 0], [1, 1], [1, -1]];
+            ? [[0, 1], [1, 0], [1, 1], [1, -1]]
+            : [[0, 1], [1, 0]];
 
         for (const [dr, dc] of directions) {
-            let count = 1;
             const line: WinCell[] = [{ row, col }];
-
-            // Check in positive direction
             for (let i = 1; i < winCondition; i++) {
                 const r = row + i * dr;
                 const c = col + i * dc;
                 if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
-                    count++;
                     line.push({ row: r, col: c });
                 } else {
                     break;
                 }
             }
-
-            // Check in negative direction
             for (let i = 1; i < winCondition; i++) {
                 const r = row - i * dr;
                 const c = col - i * dc;
                 if (r >= 0 && r < BOARD_SIZE && c >= 0 && c < BOARD_SIZE && board[r][c] === player) {
-                    count++;
-                    line.unshift({ row: r, col: c });
+                    line.push({ row: r, col: c });
                 } else {
                     break;
                 }
             }
-            
-            if (count >= winCondition) {
+            if (line.length >= winCondition) {
                 return line;
             }
         }
-
         return null;
     }, []);
 
     const handleEndGame = useCallback((gameWinner: Player) => {
-        setGameOverViewMode('popup'); // Ensure popup shows first
+        setGameOverViewMode('popup');
         if (gameMode === 'vs-ai-ranked') {
             const playerElo = getElo();
-            const aiElo = 1200; // Fixed ELO for AI
+            const aiElo = 1200;
             const result = gameWinner === HUMAN_PLAYER ? 'win' : 'loss';
             const eloChange = calculateEloChange(playerElo, aiElo, result === 'win' ? 1 : 0);
             const finalElo = playerElo + eloChange;
@@ -193,7 +183,7 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
     
     const makeMove = useCallback((row: number, col: number, player: Player) => {
         if (player === HUMAN_PLAYER) playSound('place');
-        else setTimeout(() => playSound('place'), 300); // Delay AI sound slightly
+        else setTimeout(() => playSound('place'), 300);
 
         const newBoardState = boardState.map(r => [...r]);
         newBoardState[row][col] = player;
@@ -214,106 +204,165 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
     const getLineInfo = useCallback((board: CellState[][], r: number, c: number, dr: number, dc: number, player: Player) => {
         let count = 0;
         let openEnds = 0;
-        
-        // Positive direction
+        let blocked = false;
+
         for (let i = 1; i < 7; i++) {
             const R = r + i * dr;
             const C = c + i * dc;
             if (R < 0 || R >= BOARD_SIZE || C < 0 || C >= BOARD_SIZE || board[R][C] !== player) {
                 if (R >= 0 && R < BOARD_SIZE && C >= 0 && C < BOARD_SIZE && board[R][C] === null) openEnds++;
+                else blocked = true;
                 break;
             }
             count++;
         }
         
-        // Negative direction
         for (let i = 1; i < 7; i++) {
             const R = r - i * dr;
             const C = c - i * dc;
             if (R < 0 || R >= BOARD_SIZE || C < 0 || C >= BOARD_SIZE || board[R][C] !== player) {
                  if (R >= 0 && R < BOARD_SIZE && C >= 0 && C < BOARD_SIZE && board[R][C] === null) openEnds++;
+                 else blocked = true;
                 break;
             }
             count++;
         }
         
-        return { count: count + 1, openEnds };
+        return { count: count + 1, openEnds, blocked };
     }, []);
 
     const getMoveScore = useCallback((board: CellState[][], r: number, c: number, player: Player) => {
+        if (r === -1 || c === -1) return -Infinity;
         const winCondition = player === 3 ? WIN_CONDITION_3 : WIN_CONDITION_6;
-        const directions = player === 3 ? [[0, 1], [1, 0]] : [[0, 1], [1, 0], [1, 1], [1, -1]];
+        const directions = player === 3 ? [[0, 1], [1, 0], [1, 1], [1, -1]] : [[0, 1], [1, 0]];
         let totalScore = 0;
 
         for (const [dr, dc] of directions) {
             const { count, openEnds } = getLineInfo(board, r, c, dr, dc, player);
             
-            if (count >= winCondition) return 100000;
-            if (count === winCondition - 1 && openEnds >= 1) totalScore += 5000;
-            if (count === winCondition - 2 && openEnds === 2) totalScore += 1000;
-            if (count === winCondition - 2 && openEnds === 1) totalScore += 500;
-            if (count === winCondition - 3 && openEnds === 2) totalScore += 200;
-            totalScore += count * 10;
+            if (count >= winCondition) return 1_000_000;
+            if (count === winCondition - 1 && openEnds >= 1) totalScore += 500_000;
+            if (count === winCondition - 2 && openEnds === 2) totalScore += 10_000;
+            if (count === winCondition - 2 && openEnds === 1) totalScore += 5_000;
+            if (count === winCondition - 3 && openEnds === 2) totalScore += 2_000;
+            if (count === winCondition - 3 && openEnds === 1) totalScore += 1_000;
+            totalScore += count * 100;
         }
         return totalScore;
     }, [getLineInfo]);
 
-    const findBestMove = useCallback((): { row: number; col: number } => {
-        let bestMove: { row: number, col: number } | null = null;
+    const findBestMove = useCallback((): { row: number; col: number, useSkill: boolean, emergency: boolean } => {
+        let bestMove = { row: -1, col: -1, useSkill: false, emergency: false };
         let maxScore = -Infinity;
+        let bestMovesList: { row: number, col: number, score: number }[] = [];
+
         const emptyCells: { row: number, col: number }[] = [];
-        
         boardState.forEach((row, rIdx) => {
             row.forEach((cell, cIdx) => {
                 if (!cell) emptyCells.push({ row: rIdx, col: cIdx });
             });
         });
 
-        if (emptyCells.length === 0) return { row: -1, col: -1 };
+        if (emptyCells.length === 0) return bestMove;
 
-        // Prioritize center if board is empty
+        // Prioritize center if board is nearly empty
         if (emptyCells.length > (BOARD_SIZE * BOARD_SIZE - 5)) {
-             return { row: Math.floor(BOARD_SIZE/2), col: Math.floor(BOARD_SIZE/2) };
+            return { row: Math.floor(BOARD_SIZE/2), col: Math.floor(BOARD_SIZE/2), useSkill: false, emergency: false };
         }
 
         for (const { row, col } of emptyCells) {
             let tempBoard = boardState.map(r => [...r]);
             
-            // 1. Offensive Score
             tempBoard[row][col] = AI_PLAYER;
             const offensiveScore = getMoveScore(tempBoard, row, col, AI_PLAYER);
             
-            // 2. Defensive Score
             tempBoard[row][col] = HUMAN_PLAYER;
             const defensiveScore = getMoveScore(tempBoard, row, col, HUMAN_PLAYER);
-
-            // Reset cell for next iteration
-            tempBoard[row][col] = null;
             
-            const totalScore = offensiveScore + defensiveScore * 1.5;
+            const totalScore = offensiveScore + defensiveScore * 1.2;
 
             if (totalScore > maxScore) {
                 maxScore = totalScore;
-                bestMove = { row, col };
+                bestMovesList = [{ row, col, score: totalScore }];
+            } else if (totalScore === maxScore) {
+                bestMovesList.push({ row, col, score: totalScore });
             }
         }
-        
-        return bestMove ?? emptyCells[Math.floor(Math.random() * emptyCells.length)];
-    }, [boardState, getMoveScore]);
+
+        const chosenMove = bestMovesList[Math.floor(Math.random() * bestMovesList.length)];
+        bestMove.row = chosenMove.row;
+        bestMove.col = chosenMove.col;
+
+        // Check for emergency block against Player 3
+        let humanThreat = 0;
+        let threatLocation = {row: -1, col: -1};
+        for (const { row, col } of emptyCells) {
+            let tempBoard = boardState.map(r => [...r]);
+            tempBoard[row][col] = HUMAN_PLAYER;
+            const score = getMoveScore(tempBoard, row, col, HUMAN_PLAYER);
+            if (score > humanThreat) {
+                humanThreat = score;
+                threatLocation = { row, col };
+            }
+        }
+
+        if (humanThreat >= 500_000) {
+            bestMove.row = threatLocation.row;
+            bestMove.col = threatLocation.col;
+            bestMove.emergency = true;
+            if (skillCooldowns[AI_PLAYER] === 0) {
+                bestMove.useSkill = true;
+            }
+        }
+
+        return bestMove;
+    }, [boardState, getMoveScore, skillCooldowns]);
     
-    const makeAIMove = useCallback(() => {
+    const makeAIMove = useCallback(async () => {
         setIsAiThinking(true);
-        setTimeout(() => {
-            const move = findBestMove();
-            if (move && move.row !== -1) {
-                const isGameOver = makeMove(move.row, move.col, AI_PLAYER);
-                if (!isGameOver) {
-                    switchPlayer();
+        await new Promise(resolve => setTimeout(resolve, 800));
+
+        const { row, col, useSkill, emergency } = findBestMove();
+
+        if (row === -1) {
+            setIsAiThinking(false);
+            switchPlayer();
+            return;
+        }
+
+        if (useSkill) {
+            handleUseSkill(AI_PLAYER, true);
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            const isGameOverFirstMove = makeMove(row, col, AI_PLAYER);
+            if (isGameOverFirstMove) {
+                setIsAiThinking(false);
+                return;
+            }
+            
+            const secondMoveBoard = boardState.map(r => [...r]);
+            secondMoveBoard[row][col] = AI_PLAYER;
+            const { row: secondRow, col: secondCol } = findBestMove();
+
+            if (secondRow !== -1) {
+                const isGameOverSecondMove = makeMove(secondRow, secondCol, AI_PLAYER);
+                if (isGameOverSecondMove) {
+                    setIsAiThinking(false);
+                    return;
                 }
             }
-            setIsAiThinking(false);
-        }, 800);
-    }, [findBestMove, makeMove, switchPlayer]);
+            
+        } else {
+            const isGameOver = makeMove(row, col, AI_PLAYER);
+            if (isGameOver) {
+                setIsAiThinking(false);
+                return;
+            }
+        }
+
+        setIsAiThinking(false);
+        switchPlayer();
+    }, [findBestMove, makeMove, switchPlayer, boardState]);
 
     useEffect(() => {
         if (gameMode === 'vs-ai-ranked' && currentPlayer === AI_PLAYER && !gameOver && !isAiThinking) {
@@ -331,7 +380,7 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
 
         const newMovesLeft = movesLeft - 1;
         if (skillActive && (currentPlayer === 3 ? newMovesLeft <= 1 : newMovesLeft <= 0)) {
-             setSkillActive(false); // consume skill after first of bonus moves
+             setSkillActive(false);
         }
         
         if (newMovesLeft === 0) {
@@ -341,9 +390,9 @@ const MobileGameScreen: React.FC<MobileGameScreenProps> = ({ onExit }) => {
         }
     }, [gameOver, boardState, currentPlayer, movesLeft, gameMode, makeMove, switchPlayer, skillActive]);
 
-    const handleUseSkill = (player: Player) => {
+    const handleUseSkill = (player: Player, silent = false) => {
         if (gameOver || currentPlayer !== player || skillCooldowns[player] > 0) return;
-        playSound('skill');
+        if (!silent) playSound('skill');
         setSkillActive(true);
         setMovesLeft(prev => prev + 1);
         setSkillCooldowns(prev => ({ ...prev, [player]: player === 3 ? SKILL_COOLDOWN_3 : SKILL_COOLDOWN_6 }));
